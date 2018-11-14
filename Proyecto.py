@@ -19,7 +19,6 @@ Rut1 = 1
 Rut2 = 0
 Rut3 = 0
 
-
 #lista1.append()
 
 def cambio(var_1, var_2, var_3, var_4, var_5, var_6):
@@ -50,7 +49,7 @@ boton2 = Button(ventana, text = 'Grabar', command = "funcion", bd = 10)
 boton2.grid(row=2, column=1)
 boton2_2 = Button(ventana, command = "funcion", text = "Reproducir", bd = 10)
 boton2_2.grid(row=2, column=2,padx=10, pady=10)
-boton2_3 = Button(ventana, text="Parar", command = cambio(Manual, ), bd = 10)
+boton2_3 = Button(ventana, text="Parar", command = cambio(Manual, Rut1, Pleito, Grabar, Rut2, Rut3), bd = 10)
 boton2_3.grid(row=2, column=3)
 
 #FILA2
@@ -61,7 +60,7 @@ boton3 = Button(ventana, text="Grabar", command = "funcion", bd = 10)
 boton3.grid(row=3, column=1)
 boton3_2 = Button(ventana, text="Reproducir", command = "funcion", bd = 10)
 boton3_2.grid(row=3, column=2,padx=10, pady=10)
-boton3_3 = Button(ventana, text="Parar", command = "funcion", bd = 10)
+boton3_3 = Button(ventana, text="Parar", command = cambio(Manual, Rut2, Pleito, Grabar, Rut1, Rut3), bd = 10)
 boton3_3.grid(row=3, column=3)
 
 #FILA3
@@ -72,27 +71,36 @@ boton1 = Button(ventana, text="Grabar", command = "funcion", bd = 10)
 boton1.grid(row=4, column=1)
 boton1_2 = Button(ventana, text="Reproducir", command = "funcion", bd = 10)
 boton1_2.grid(row=4, column=2,padx=10, pady=10)
-boton1_3 = Button(ventana, text="Parar", command = "funcion", bd = 10)
+boton1_3 = Button(ventana, text="Parar", command = cambio(Manual, Rut3, Pleito, Grabar, Rut2, Rut1), bd = 10)
 boton1_3.grid(row=4, column=3)
 
-
-#LOOPS
-ser= serial.Serial(port='COM5',baudrate=9600, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE,bytesize=serial.EIGHTBITS, timeout=0)
-
-while Manual == 1:
-   print 'hola'
-   ventana.update()
-    
-while Pleito == 1:
-    print 'adios'
+while 1:
+    time.sleep
+    print Manual
+    print Pleito
+    print Grabar
+    print Rut1
+    print Rut2
+    print Rut3
     ventana.update()
 
-
-
-
-
-
-
-
-
-
+##
+###LOOPS
+##ser= serial.Serial(port='COM5',baudrate=9600, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE,bytesize=serial.EIGHTBITS, timeout=0)
+##
+##while Manual == 1:
+##   print 'hola'
+##   ventana.update()
+##    
+##while Grabar == 1:
+##    print 'adios'
+##    ventana.update()
+##    
+##while Pleito == 1:
+##    print 'adios'
+##    ventana.update()
+##
+##
+##
+##
+##
