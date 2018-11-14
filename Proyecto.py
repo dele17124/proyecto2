@@ -1,5 +1,5 @@
 # -*- coding: cp1252 -*-
-#Proyecto final Rony Schumann y Luis Fernando de león
+#Proyecto final Rony Schumann y Luis Fernando de leÃ³n
 
 #importar librerias
 from Tkinter import *
@@ -38,7 +38,7 @@ ventana.configure(bg = '#CED8F6')
 #NOMBRES
 Nombre = Label(ventana, text = "Rony Schumann 17232", bg = '#CED8F6', font=("Times", 10))
 Nombre.grid(row=0, column=0)
-Nombre2 = Label(ventana, text = "Tusitar de León 17124", bg = '#CED8F6', font=("Times", 10))
+Nombre2 = Label(ventana, text = "Tusitar de LeÃ³n 17124", bg = '#CED8F6', font=("Times", 10))
 Nombre2.grid(row=1, column=0,pady=(1, 50))
 
 #FILA1
@@ -84,7 +84,6 @@ while 1:
     print Rut3
     ventana.update()
 
-##
 ###LOOPS
 ##ser= serial.Serial(port='COM5',baudrate=9600, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE,bytesize=serial.EIGHTBITS, timeout=0)
 ##
