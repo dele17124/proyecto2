@@ -149,15 +149,24 @@ boton1_3.grid(row=4, column=3)
 #ser= serial.Serial(port='COM5',baudrate=9600, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE,bytesize=serial.EIGHTBITS, timeout=0)
 while 1:
     while Manual == 1:
-       print 'dele_duro'
+       print 'modo manual'
        ventana.update()
-        
+    
     while Grabar_ == 1:
-        
-        print 'grabe'
+        if Rutina_1 == 1:
+            print 'rutina1 grabando'
+        elif Rutina_2 == 1:
+            print 'rutina2 grabando'
+        else:
+            print 'rutina3 grabando'
         ventana.update()
         
     while Playstation == 1:
-        print 'play'
+        if Rutina_1 == 1:
+            print 'rutina1 play'
+        elif Rutina_2 == 1:
+            print 'rutina2 play'
+        else:
+            print 'rutina3 play'
         ventana.update()
 
