@@ -20,8 +20,9 @@ RECIBO	    RES	    1
 MANDAR	    RES	    1
 EXTRA	    RES	    1
 PERIODO	    RES	    1
-CONT_PWM1   RES	    1
-CONT_PWM2   RES	    1
+COMP_PWM3   RES	    1
+COMP_PWM4   RES	    1
+CONT	    RES	    1
     
 ;*******************************************************************************
    
@@ -35,7 +36,10 @@ ISR       CODE    0x0004           ; interrupt vector location
     SWAPF STATUS,W
     MOVWF STATUS2
   ISR:
-    NOP
+    BTFSC INTCON, T0IF
+    CALL INT_TMR0
+    BTFSC PIR1, TMR1IF
+    CALL INT_TMR1
   POP:
     SWAPF STATUS2,W
     MOVWF STATUS
@@ -44,8 +48,23 @@ ISR       CODE    0x0004           ; interrupt vector location
     RETFIE
 ;*******************************************************************************
 ;--------------------------SUBRUTINAS DE INTERRUPCION---------------------------
-
-
+INT_TMR0	;CONTROLA PERÍODO
+    MOVLW .251
+    MOVWF TMR0
+    BCF INTCON, T0IF
+    BSF PORTD, 0	    
+    BSF PORTD, 1	    ;SALIDAS PWM
+    CLRF CONT
+    RETURN
+INT_TMR1		    ;CONTROLA TIEMPO DE DUTY CYCLE
+    MOVLW b'11111111'
+    MOVWF TMR1H 
+    MOVLW b'11111000'	    ;HAY QUE CAMBIARLO LO MAS SEGURO, A UNO MAS RAPIDO
+    MOVWF TMR1L
+    BCF PIR1, TMR1IF
+    INCF CONT
+    ;COMPARAR CON VALORES DE COMP_PWM 3 Y 4
+    RETURN
 ;*******************************************************************************
 ; MAIN PROGRAM
 ;*******************************************************************************
@@ -59,17 +78,18 @@ START
  CALL CEREAL
  CALL TIMER0
  CALL TIMER1
+ CALL ACTINT
  CALL PWM_2
  CALL PWM_1
  
  BCF STATUS, 6
  BCF STATUS, 5	;BANCO 0
  
- MANUAL:
+ LOOP:
     ;---------------POT 1-----------------
     CALL AN_0
     CALL ENVIO
-    CALL RETRASAR	
+    CALL RETRASAR ;10ms
     BTFSC PIR1, RCIF
     CALL RECIBIR_DEF
     MOVF EXTRA, W
@@ -77,7 +97,7 @@ START
     ;---------------POT 2-----------------
     CALL AN_1
     CALL ENVIO
-    CALL RETRASAR
+    CALL RETRASAR ;10ms
     BTFSC PIR1, RCIF
     CALL RECIBIR_DEF
     MOVF EXTRA, W
@@ -85,17 +105,19 @@ START
     ;---------------POT 3-----------------
     CALL AN_2
     CALL ENVIO
-    CALL RETRASAR
-    
+    CALL RETRASAR ;10ms
+    CALL RECIBIR_
+    MOVF EXTRA, W
+    MOVWF COMP_PWM3
     ;---------------POT 4-----------------
     CALL AN_3
     CALL ENVIO
-    CALL RETRASAR
+    CALL RETRASAR ;10ms
+    CALL RECIBIR_
+    MOVF EXTRA, W
+    MOVWF COMP_PWM4
     
-    ;BTFSC PIR1, RCIF
-    ;CALL RECIBIR_DEF
-    
-    GOTO MANUAL
+    GOTO LOOP
 ;*******************************************************************************
 ;-----------------------------SUBRUTINAS PRINCIPAL------------------------------
 ENVIO
@@ -137,11 +159,11 @@ CH_AN3
     BSF ADCON0, 2	;SELECCIONO CANAL DE ENTRADA AN3
     RETURN
 ;    
-RETRASAR ;DELAY DE 50ms
-    MOVLW .55
+RETRASAR ;DELAY DE 10ms
+    MOVLW .4
     MOVWF DELAY1
     MAS:	
-	MOVLW .54
+	MOVLW .154
 	MOVWF DELAY2
     SEGUIR:    
 	DECFSZ DELAY2
@@ -151,6 +173,8 @@ RETRASAR ;DELAY DE 50ms
     RETURN
 ;    
 RECIBIR_DEF
+    BTFSS PIR1, RCIF
+    RETURN
     BCF CCP2CON, DC2B0
     BCF CCP2CON, DC2B1
     MOVF RCREG, W
@@ -163,14 +187,21 @@ RECIBIR_DEF
     RRF	RECIBO, W
     ANDLW B'00111111'
     MOVWF EXTRA
-    RETURN    
+    RETURN
+;    
+RECIBIR_
+    BTFSS PIR1, RCIF
+    RETURN
+    MOVF RCREG, W
+    MOVWF EXTRA
+    RETURN
 ;*******************************************************************************
 ;--------------------------CONFIGURACION-INICIAL--------------------------------
 PINES
     BCF STATUS, 6
     BSF STATUS, 5	;BANCO 1
     CLRF TRISC
-    CLRF TRISD
+    CLRF TRISD		;SALIDAS PWM EN 0 Y 1
     CLRF TRISB
     CLRF TRISA		;SALIDAS
     BSF TRISA, 0
@@ -267,13 +298,13 @@ TIMER0
    BCF OPTION_REG, PSA	;ASIGNAR PRESCALER A TIMER0
 
    BSF OPTION_REG, 2
-   BCF OPTION_REG, 1
-   BSF OPTION_REG, 0	;VALOR DE PRESCALER 64*****************
+   BSF OPTION_REG, 1
+   BSF OPTION_REG, 0	;VALOR DE PRESCALER 256****************
    BCF INTCON, T0IF	;BANDERA APAGADA
 
    BCF STATUS, 6
    BCF STATUS, 5	;BANCO 0
-   MOVLW .255		;N CALCULADO***************************
+   MOVLW .251		;N CALCULADO***************************
    MOVWF TMR0		;TMR 2ms
    RETURN
 
@@ -285,12 +316,21 @@ TIMER1
    BCF T1CON, 4		;PRESCALER 1	
    BSF T1CON, 0		;ENABLE
    BCF PIR1, TMR1IF	;BANDERA TMR1
-   MOVLW b'00001011'
+   MOVLW b'11111111'
    MOVWF TMR1H 
-   MOVLW b'11011100'
+   MOVLW b'11111000'
    MOVWF TMR1L
    RETURN
 
+ACTINT
+   BCF STATUS, 6
+   BSF STATUS, 5	;BANCO 1
+   BSF INTCON, GIE	;GLOBALES
+   BSF INTCON, T0IE	;TMR0
+   BSF INTCON, PEIE	;PERIFERICA	
+   BSF PIE1, TMR1IE	;TMR1
+   RETURN
+   
 PWM_2
    BCF STATUS, 6
    BSF STATUS, 5	;BANCO 1
