@@ -15,10 +15,13 @@ W2	    RES     1
 STATUS2	    RES     1
 DELAY1	    RES	    1
 DELAY2	    RES	    1
-CONVERSION  RES	    1
 PAQUETE	    RES	    1
 RECIBO	    RES	    1
 MANDAR	    RES	    1
+EXTRA	    RES	    1
+PERIODO	    RES	    1
+CONT_PWM1   RES	    1
+CONT_PWM2   RES	    1
     
 ;*******************************************************************************
    
@@ -39,7 +42,13 @@ ISR       CODE    0x0004           ; interrupt vector location
     SWAPF W2,F
     SWAPF W2,W
     RETFIE
-    
+;*******************************************************************************
+;--------------------------SUBRUTINAS DE INTERRUPCION---------------------------
+
+
+;*******************************************************************************
+; MAIN PROGRAM
+;*******************************************************************************
 MAIN_PROG CODE                      ; let linker place main program
  
 START
@@ -48,54 +57,86 @@ START
  CALL OSCILADOR
  CALL ADC_CONF
  CALL CEREAL
+ CALL TIMER0
+ CALL TIMER1
  CALL PWM_2
  CALL PWM_1
  
  BCF STATUS, 6
  BCF STATUS, 5	;BANCO 0
  
- LOOP:
-    CALL RETRASAR	;MOTOR1
-    CALL ACTIVAR_ADC
-    CALL ENVIAR
-    
+ MANUAL:
+    ;---------------POT 1-----------------
+    CALL AN_0
+    CALL ENVIO
+    CALL RETRASAR	
     BTFSC PIR1, RCIF
-    CALL RECIBIR
+    CALL RECIBIR_DEF
+    MOVF EXTRA, W
+    MOVWF CCPR1L
+    ;---------------POT 2-----------------
+    CALL AN_1
+    CALL ENVIO
+    CALL RETRASAR
+    BTFSC PIR1, RCIF
+    CALL RECIBIR_DEF
+    MOVF EXTRA, W
+    MOVWF CCPR2L
+    ;---------------POT 3-----------------
+    CALL AN_2
+    CALL ENVIO
+    CALL RETRASAR
     
-    GOTO LOOP
-
+    ;---------------POT 4-----------------
+    CALL AN_3
+    CALL ENVIO
+    CALL RETRASAR
+    
+    ;BTFSC PIR1, RCIF
+    ;CALL RECIBIR_DEF
+    
+    GOTO MANUAL
+;*******************************************************************************
 ;-----------------------------SUBRUTINAS PRINCIPAL------------------------------
-ACTIVAR_ADC
+ENVIO
     BSF ADCON0, GO
-    BTFSC ADCON0, GO			; revisa que termina la conversion
+    BTFSC ADCON0, GO	;ESPERA LA CONVERSION
     GOTO $-1
     MOVF ADRESH, W
-    MOVWF CONVERSION
+    MOVWF TXREG		;MANDA EL VALOR CONVERTIDO
     BCF PIR1, ADIF
-    RETURN
-    
-ENVIAR
-    MOVFW CONVERSION
-    MOVWF TXREG
-    BTFSS PIR1, TXIF
+    BTFSS PIR1, TXIF	;ESPERA A QUE SE MANDE
     GOTO $-1
     RETURN
-
-RECIBIR
-    BCF CCP2CON, DC2B0
-    BCF CCP2CON, DC2B1
-    MOVF RCREG, W
-    MOVWF RECIBO
-    BTFSC RECIBO, 0
-    BSF CCP2CON, DC2B0
-    BTFSC RECIBO, 1
-    BSF CCP2CON, DC2B1
-    RRF	RECIBO, F
-    RRF	RECIBO, W
-    ANDLW B'00111111'
-    MOVWF CCPR2L
+;
+CH_AN0
+    BCF ADCON0, 5
+    BCF ADCON0, 4
+    BCF ADCON0, 3
+    BCF ADCON0, 2	;SELECCIONO CANAL DE ENTRADA AN0
     RETURN
-
+;    
+CH_AN1
+    BCF ADCON0, 5
+    BCF ADCON0, 4
+    BCF ADCON0, 3
+    BSF ADCON0, 2	;SELECCIONO CANAL DE ENTRADA AN1
+    RETURN
+;    
+CH_AN2
+    BCF ADCON0, 5
+    BCF ADCON0, 4
+    BSF ADCON0, 3
+    BCF ADCON0, 2	;SELECCIONO CANAL DE ENTRADA AN2
+    RETURN
+;    
+CH_AN3
+    BCF ADCON0, 5
+    BCF ADCON0, 4
+    BSF ADCON0, 3
+    BSF ADCON0, 2	;SELECCIONO CANAL DE ENTRADA AN3
+    RETURN
+;    
 RETRASAR ;DELAY DE 50ms
     MOVLW .55
     MOVWF DELAY1
@@ -108,6 +149,22 @@ RETRASAR ;DELAY DE 50ms
     DECFSZ DELAY1
     GOTO MAS
     RETURN
+;    
+RECIBIR_DEF
+    BCF CCP2CON, DC2B0
+    BCF CCP2CON, DC2B1
+    MOVF RCREG, W
+    MOVWF RECIBO
+    BTFSC RECIBO, 0
+    BSF CCP2CON, DC2B0
+    BTFSC RECIBO, 1
+    BSF CCP2CON, DC2B1
+    RRF	RECIBO, F
+    RRF	RECIBO, W
+    ANDLW B'00111111'
+    MOVWF EXTRA
+    RETURN    
+;*******************************************************************************
 ;--------------------------CONFIGURACION-INICIAL--------------------------------
 PINES
     BCF STATUS, 6
@@ -116,13 +173,19 @@ PINES
     CLRF TRISD
     CLRF TRISB
     CLRF TRISA		;SALIDAS
-    BSF TRISA, 1	;ENTRADA
+    BSF TRISA, 0
+    BSF TRISA, 1
+    BSF TRISA, 2
+    BSF TRISA, 3	;ENTRADAS
     
     BSF STATUS, 6
     BSF STATUS, 5	;BANCO 3
     CLRF ANSEL 
     CLRF ANSELH
-    BSF ANSEL, 1	;LA ENTRADA ES EL AN1 O EL PORTA 1
+    BSF ANSEL, 0	;LA ENTRADA ES EL AN0-PORTA 0
+    BSF ANSEL, 1	;LA ENTRADA ES EL AN1-PORTA 1
+    BSF ANSEL, 2	;LA ENTRADA ES EL AN2-PORTA 2
+    BSF ANSEL, 3	;LA ENTRADA ES EL AN3-PORTA 3
     RETURN
 
 LIMPIAR
@@ -159,7 +222,7 @@ ADC_CONF
     BCF ADCON0, 5
     BCF ADCON0, 4
     BCF ADCON0, 3
-    BSF ADCON0, 2	;SELECCIONO CANAL DE ENTRADA AN1
+    BCF ADCON0, 2	;SELECCIONO CANAL DE ENTRADA AN0
     
     BCF STATUS, 6
     BSF STATUS, 5	;BANCO 1
@@ -199,6 +262,35 @@ CEREAL
     BSF	TXSTA, TXEN	;HABILITO LA TRANSMISION
     RETURN
     
+TIMER0
+   BCF OPTION_REG, T0CS	;TIMER0 TEMPORIZADOR
+   BCF OPTION_REG, PSA	;ASIGNAR PRESCALER A TIMER0
+
+   BSF OPTION_REG, 2
+   BCF OPTION_REG, 1
+   BSF OPTION_REG, 0	;VALOR DE PRESCALER 64*****************
+   BCF INTCON, T0IF	;BANDERA APAGADA
+
+   BCF STATUS, 6
+   BCF STATUS, 5	;BANCO 0
+   MOVLW .255		;N CALCULADO***************************
+   MOVWF TMR0		;TMR 2ms
+   RETURN
+
+TIMER1
+   BCF T1CON, 1		;INTERNAL CLOCK
+   BCF T1CON, 3		;LP OFF
+   BCF T1CON, 6		;ALWAYS COUNTING
+   BCF T1CON, 5
+   BCF T1CON, 4		;PRESCALER 1	
+   BSF T1CON, 0		;ENABLE
+   BCF PIR1, TMR1IF	;BANDERA TMR1
+   MOVLW b'00001011'
+   MOVWF TMR1H 
+   MOVLW b'11011100'
+   MOVWF TMR1L
+   RETURN
+
 PWM_2
    BCF STATUS, 6
    BSF STATUS, 5	;BANCO 1
