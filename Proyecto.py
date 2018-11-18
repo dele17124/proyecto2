@@ -13,7 +13,9 @@ Playstation = 0
 Manual = 1
 Rutina_1 = 0
 Rutina_2 = 0
-#lista1.append()
+Lista1 = []
+Lista2 = []
+Lista3 = []
 
 def Stop_():
     global Grabar_
@@ -64,6 +66,7 @@ def play_3():
     Rutina_2 = 0
     
 def rec_1():
+    global Lista1
     global Grabar_
     global Playstation
     global Manual
@@ -74,8 +77,10 @@ def rec_1():
     Manual = 0
     Rutina_1 = 1
     Rutina_2 = 0
+    Lista1 = []
 
 def rec_2():
+    global Lista2
     global Grabar_
     global Playstation
     global Manual
@@ -86,8 +91,10 @@ def rec_2():
     Manual = 0
     Rutina_1 = 0
     Rutina_2 = 1
+    Lista2 = []
 
 def rec_3():
+    global Lista3
     global Grabar_
     global Playstation
     global Manual
@@ -98,7 +105,49 @@ def rec_3():
     Manual = 0
     Rutina_1 = 0
     Rutina_2 = 0
+    Lista3 = []
 
+def conv_def(datos, pot):
+    if datos <=110:
+        if pot >20:
+            pot = pot -1
+        else:
+            pass
+    elif datos >=140:
+        if pot <80:
+            pot = pot +1
+        else:
+            pass
+    else:
+        pass
+    return pot
+
+def conv_2(datos, pot):
+    if datos <=110:
+        if pot >20:
+            pot = pot -1
+        else:
+            pass
+    elif datos >=140:
+        if pot <80:
+            pot = pot +1
+        else:
+            pass
+    else:
+        pass
+    return pot
+
+def espere_mijo():
+    ok= 1
+    while ok ==1:
+        recibo = ser.read()
+        ventana.update()
+        try:
+            Valor = ord(recibo)
+            ok = 0
+        except:
+            pass
+    return Valor
 
 #VENTANA
 ventana = Tk()
@@ -145,28 +194,82 @@ boton1_3 = Button(ventana, text="Parar", command = Stop_, bd = 10)
 boton1_3.grid(row=4, column=3)
 
 
+Pot1 = 21
+Pot2 = 21
+Pot3 = 21
+Pot4 = 21
+
 #LOOPS
-#ser= serial.Serial(port='COM5',baudrate=9600, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE,bytesize=serial.EIGHTBITS, timeout=0)
+ser= serial.Serial(port='COM5',baudrate=9600, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE,bytesize=serial.EIGHTBITS, timeout=0)
 while 1:
     while Manual == 1:
-       print 'modo manual'
-       ventana.update()
+        recibi = espere_mijo() #------motor 1
+        Pot1 = conv_1(recibi, Pot1)
+        envio = chr(Pot1)
+        ser.write(envio)
+        recibi = espere_mijo() #------motor 2
+        Pot2 = conv_1(recibi, Pot2)
+        envio = chr(Pot2)
+        ser.write(envio)
+        recibi = espere_mijo() #------motor 3
+        Pot3 = conv_1(recibi, Pot3)
+        envio = chr(Pot3)
+        ser.write(envio)
+        recibi = espere_mijo() #------motor 4
+        Pot4 = conv_1(recibi, Pot4)
+        envio = chr(Pot4)
+        ser.write(envio)
     
     while Grabar_ == 1:
         if Rutina_1 == 1:
-            print 'rutina1 grabando'
+            recibi = espere_mijo() #------motor 1
+            Pot1 = conv_1(recibi, Pot1)
+            Lista1.append(Pot1)
+            recibi = espere_mijo() #------motor 2
+            Pot2 = conv_1(recibi, Pot2)
+            Lista1.append(Pot2)
+            recibi = espere_mijo() #------motor 3
+            Pot3 = conv_1(recibi, Pot3)
+            Lista1.append(Pot3)
+            recibi = espere_mijo() #------motor 4
+            Pot4 = conv_1(recibi, Pot4)
+            Lista1.append(Pot4)
         elif Rutina_2 == 1:
-            print 'rutina2 grabando'
+            recibi = espere_mijo() #------motor 1
+            Pot1 = conv_1(recibi, Pot1)
+            Lista2.append(Pot1)
+            recibi = espere_mijo() #------motor 2
+            Pot2 = conv_1(recibi, Pot2)
+            Lista2.append(Pot2)
+            recibi = espere_mijo() #------motor 3
+            Pot3 = conv_1(recibi, Pot3)
+            Lista2.append(Pot3)
+            recibi = espere_mijo() #------motor 4
+            Pot4 = conv_1(recibi, Pot4)
+            Lista2.append(Pot4)
         else:
-            print 'rutina3 grabando'
+            recibi = espere_mijo() #------motor 1
+            Pot1 = conv_1(recibi, Pot1)
+            Lista3.append(Pot1)
+            recibi = espere_mijo() #------motor 2
+            Pot2 = conv_1(recibi, Pot2)
+            Lista3.append(Pot2)
+            recibi = espere_mijo() #------motor 3
+            Pot3 = conv_1(recibi, Pot3)
+            Lista3.append(Pot3)
+            recibi = espere_mijo() #------motor 4
+            Pot4 = conv_1(recibi, Pot4)
+            Lista3.append(Pot4)
         ventana.update()
         
     while Playstation == 1:
+        time.sleep(.05)
         if Rutina_1 == 1:
             print 'rutina1 play'
         elif Rutina_2 == 1:
             print 'rutina2 play'
         else:
             print 'rutina3 play'
+        #Enviar datos de variable grabados
         ventana.update()
 
