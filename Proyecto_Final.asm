@@ -48,7 +48,7 @@ ISR       CODE    0x0004           ; interrupt vector location
     RETFIE
 ;*******************************************************************************
 ;--------------------------SUBRUTINAS DE INTERRUPCION---------------------------
-INT_TMR0	;CONTROLA PERÍODO
+INT_TMR0	;CONTROLA PERÍODO 10ms
     MOVLW .251
     MOVWF TMR0
     BCF INTCON, T0IF
@@ -59,7 +59,7 @@ INT_TMR0	;CONTROLA PERÍODO
 INT_TMR1		    ;CONTROLA TIEMPO DE DUTY CYCLE
     MOVLW b'11111111'
     MOVWF TMR1H 
-    MOVLW b'11111000'	    ;HAY QUE CAMBIARLO LO MAS SEGURO, A UNO MAS RAPIDO
+    MOVLW b'11000010'	    ;HAY QUE CAMBIARLO LO MAS SEGURO, A UNO MAS RAPIDO
     MOVWF TMR1L
     BCF PIR1, TMR1IF
     INCF CONT
@@ -87,35 +87,37 @@ START
  
  LOOP:
     ;---------------POT 1-----------------
-    CALL AN_0
+    CALL CH_AN0
     CALL ENVIO
-    CALL RETRASAR ;10ms
-    BTFSC PIR1, RCIF
-    CALL RECIBIR_DEF
-    MOVF EXTRA, W
-    MOVWF CCPR1L
+    CALL RETRASAR ;20ms
+    ;BTFSC PIR1, RCIF
+    ;CALL RECIBIR_DEF
+    ;MOVF EXTRA, W
+    ;MOVWF CCPR1L
     ;---------------POT 2-----------------
-    CALL AN_1
+    CALL CH_AN1
     CALL ENVIO
-    CALL RETRASAR ;10ms
-    BTFSC PIR1, RCIF
-    CALL RECIBIR_DEF
-    MOVF EXTRA, W
-    MOVWF CCPR2L
+    CALL RETRASAR ;20ms
+    ;BTFSC PIR1, RCIF
+    ;CALL RECIBIR_DEF
+    ;MOVF EXTRA, W
+    ;MOVWF CCPR2L
     ;---------------POT 3-----------------
-    CALL AN_2
+    CALL CH_AN2
     CALL ENVIO
-    CALL RETRASAR ;10ms
-    CALL RECIBIR_
-    MOVF EXTRA, W
-    MOVWF COMP_PWM3
+    CALL RETRASAR ;20ms
+    ;BTFSC PIR1, RCIF
+    ;CALL RECIBIR_
+    ;MOVF EXTRA, W
+    ;MOVWF COMP_PWM3
     ;---------------POT 4-----------------
-    CALL AN_3
+    CALL CH_AN3
     CALL ENVIO
-    CALL RETRASAR ;10ms
-    CALL RECIBIR_
-    MOVF EXTRA, W
-    MOVWF COMP_PWM4
+    CALL RETRASAR ;20ms
+    ;BTFSC PIR1, RCIF
+    ;CALL RECIBIR_
+    ;MOVF EXTRA, W
+    ;MOVWF COMP_PWM4
     
     GOTO LOOP
 ;*******************************************************************************
@@ -159,11 +161,11 @@ CH_AN3
     BSF ADCON0, 2	;SELECCIONO CANAL DE ENTRADA AN3
     RETURN
 ;    
-RETRASAR ;DELAY DE 10ms
-    MOVLW .4
+RETRASAR ;DELAY DE 20ms
+    MOVLW .10
     MOVWF DELAY1
     MAS:	
-	MOVLW .154
+	MOVLW .123
 	MOVWF DELAY2
     SEGUIR:    
 	DECFSZ DELAY2
@@ -318,7 +320,7 @@ TIMER1
    BCF PIR1, TMR1IF	;BANDERA TMR1
    MOVLW b'11111111'
    MOVWF TMR1H 
-   MOVLW b'11111000'
+   MOVLW b'11000010'
    MOVWF TMR1L
    RETURN
 
@@ -337,7 +339,7 @@ PWM_2
    BSF TRISC, RC2
    ;MOVLW .155
    MOVLW .77
-   MOVWF PR2		;PERIODO DE PWM 20ms
+   MOVWF PR2		;PERIODO DE PWM 10ms
    
    BCF STATUS, 6
    BCF STATUS, 5	;BANCO 0
@@ -371,7 +373,7 @@ PWM_1
    BSF STATUS, 5	;BANCO 1
    BSF TRISC, RC1
    MOVLW .77
-   MOVWF PR2		;PERIODO DE PWM 20ms
+   MOVWF PR2		;PERIODO DE PWM 10ms
    
    BCF STATUS, 6
    BCF STATUS, 5	;BANCO 0
