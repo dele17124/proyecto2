@@ -6,7 +6,6 @@ from Tkinter import *
 import serial
 import time
 import sys
-#from PIL import Image, ImageTk
 
 Grabar_ = 0
 Playstation = 0
@@ -40,6 +39,7 @@ def play_1():
     Manual = 0
     Rutina_1 = 1
     Rutina_2 = 0
+    ser.write(chr(255))
 
 def play_2():
     global Grabar_
@@ -52,6 +52,7 @@ def play_2():
     Manual = 0
     Rutina_1 = 0
     Rutina_2 = 1
+    ser.write(chr(255))
 
 def play_3():
     global Grabar_
@@ -64,6 +65,7 @@ def play_3():
     Manual = 0
     Rutina_1 = 0
     Rutina_2 = 0
+    ser.write(chr(255))
     
 def rec_1():
     global Lista1
@@ -124,12 +126,12 @@ def conv_def(datos, pot):
 
 def conv_2(datos, pot):
     if datos <=110:
-        if pot >20:
+        if pot >1:
             pot = pot -1
         else:
             pass
     elif datos >=140:
-        if pot <80:
+        if pot <5:
             pot = pot +1
         else:
             pass
@@ -138,15 +140,10 @@ def conv_2(datos, pot):
     return pot
 
 def espere_mijo():
-    ok= 1
-    while ok ==1:
-        recibo = ser.read()
+    while ser.inWaiting()==0:
         ventana.update()
-        try:
-            Valor = ord(recibo)
-            ok = 0
-        except:
-            pass
+    recibo = ser.read()
+    Valor = ord(recibo)
     return Valor
 
 #VENTANA
@@ -194,82 +191,91 @@ boton1_3 = Button(ventana, text="Parar", command = Stop_, bd = 10)
 boton1_3.grid(row=4, column=3)
 
 
-Pot1 = 21
-Pot2 = 21
-Pot3 = 21
-Pot4 = 21
+Pot1 = 20
+Pot2 = 20
+Pot3 = 5
+Pot4 = 5
 
 #LOOPS
 ser= serial.Serial(port='COM5',baudrate=9600, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE,bytesize=serial.EIGHTBITS, timeout=0)
 while 1:
     while Manual == 1:
         recibi = espere_mijo() #------motor 1
-        Pot1 = conv_1(recibi, Pot1)
+        Pot1 = conv_def(recibi, Pot1)
         envio = chr(Pot1)
         ser.write(envio)
         recibi = espere_mijo() #------motor 2
-        Pot2 = conv_1(recibi, Pot2)
+        Pot2 = conv_def(recibi, Pot2)
         envio = chr(Pot2)
         ser.write(envio)
         recibi = espere_mijo() #------motor 3
-        Pot3 = conv_1(recibi, Pot3)
+        Pot3 = conv_2(recibi, Pot3)
         envio = chr(Pot3)
         ser.write(envio)
         recibi = espere_mijo() #------motor 4
-        Pot4 = conv_1(recibi, Pot4)
+        Pot4 = conv_2(recibi, Pot4)
         envio = chr(Pot4)
         ser.write(envio)
     
     while Grabar_ == 1:
         if Rutina_1 == 1:
             recibi = espere_mijo() #------motor 1
-            Pot1 = conv_1(recibi, Pot1)
+            Pot1 = conv_def(recibi, Pot1)
             Lista1.append(Pot1)
             recibi = espere_mijo() #------motor 2
-            Pot2 = conv_1(recibi, Pot2)
+            Pot2 = conv_def(recibi, Pot2)
             Lista1.append(Pot2)
             recibi = espere_mijo() #------motor 3
-            Pot3 = conv_1(recibi, Pot3)
+            Pot3 = conv_2(recibi, Pot3)
             Lista1.append(Pot3)
             recibi = espere_mijo() #------motor 4
-            Pot4 = conv_1(recibi, Pot4)
+            Pot4 = conv_2(recibi, Pot4)
             Lista1.append(Pot4)
         elif Rutina_2 == 1:
             recibi = espere_mijo() #------motor 1
-            Pot1 = conv_1(recibi, Pot1)
+            Pot1 = conv_def(recibi, Pot1)
             Lista2.append(Pot1)
             recibi = espere_mijo() #------motor 2
-            Pot2 = conv_1(recibi, Pot2)
+            Pot2 = conv_def(recibi, Pot2)
             Lista2.append(Pot2)
             recibi = espere_mijo() #------motor 3
-            Pot3 = conv_1(recibi, Pot3)
+            Pot3 = conv_2(recibi, Pot3)
             Lista2.append(Pot3)
             recibi = espere_mijo() #------motor 4
-            Pot4 = conv_1(recibi, Pot4)
+            Pot4 = conv_2(recibi, Pot4)
             Lista2.append(Pot4)
         else:
             recibi = espere_mijo() #------motor 1
-            Pot1 = conv_1(recibi, Pot1)
+            Pot1 = conv_def(recibi, Pot1)
             Lista3.append(Pot1)
             recibi = espere_mijo() #------motor 2
-            Pot2 = conv_1(recibi, Pot2)
+            Pot2 = conv_def(recibi, Pot2)
             Lista3.append(Pot2)
             recibi = espere_mijo() #------motor 3
-            Pot3 = conv_1(recibi, Pot3)
+            Pot3 = conv_2(recibi, Pot3)
             Lista3.append(Pot3)
             recibi = espere_mijo() #------motor 4
-            Pot4 = conv_1(recibi, Pot4)
+            Pot4 = conv_2(recibi, Pot4)
             Lista3.append(Pot4)
-        ventana.update()
         
     while Playstation == 1:
-        time.sleep(.05)
-        if Rutina_1 == 1:
-            print 'rutina1 play'
-        elif Rutina_2 == 1:
-            print 'rutina2 play'
+        time.sleep(.01)
+        if Rutina_1 == 1:       #rutina 1
+            for x in Lista1:
+                envio = chr(x)
+                ser.write(envio)
+                time.sleep(0.01)
+                ventana.update()
+        elif Rutina_2 == 1:     #rutina 2
+            for x in Lista2:
+                envio = chr(x)
+                ser.write(envio)
+                time.sleep(0.01)
+                ventana.update()
         else:
-            print 'rutina3 play'
-        #Enviar datos de variable grabados
-        ventana.update()
+            for x in Lista3:    #rutina 3
+                envio = chr(x)
+                ser.write(envio)
+                time.sleep(0.01)
+                ventana.update()
 
